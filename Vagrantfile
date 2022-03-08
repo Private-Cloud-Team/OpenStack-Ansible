@@ -1,12 +1,17 @@
 IMAGE = "centos/stream8"
 MEM = 1024
 CPU = 1
-CONTROLLER_NAME = "ControllerNode"
-COMPUTE_NAME = "ComputeNode"
-DEPLOYMENT_CLIENT_NAME = "DeploymentClientNode"
-CONTROLLER_IP = "192.168.42.110"
-COMPUTE_IP = "192.168.42.111"
-DEPLOYMENT_CLIENT_IP = "192.168.42.112"
+DEPLOYMENT_HOST_NAME = "DeploymentHost"
+DEPLOYMENT_HOST_IP = 9
+BR_MGMT_IP = "192.168.42."
+
+nodes = {
+  'ControllerNode' => [1, 10],
+  'ComputeNode' => [1, 100],
+  'StorageNode' => [1, 200]
+}
+
+hostnames = [ DEPLOYMENT_HOST_NAME ]
 
 Vagrant.configure("2") do |config|
 
@@ -17,30 +22,33 @@ Vagrant.configure("2") do |config|
 		vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
 		vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
 	end
-	config.vm.provision "shell", privileged: true, path: "scripts/common_installation.sh"
 
-	config.vm.define CONTROLLER_NAME do |controller|
-		controller.vm.hostname = CONTROLLER_NAME
-		controller.vm.network :private_network, ip: CONTROLLER_IP
-		controller.vm.provider "virtualbox" do |v|
-			v.name = CONTROLLER_NAME
-		end
-	end
+        nodes.each do |name, (count, ip)|
+          count.times do |i|
+            hostname = "%s-%02d" % [name, (i+1)]
+            hostnames.push(hostname)
+            config.vm.define "#{hostname}" do |node|
+                    node.vm.hostname = "#{hostname}"
+                    node.vm.network :private_network, ip: "#{BR_MGMT_IP}#{ip+i}", :netmask => "255.255.255.0"
+                    node.vm.provider "virtualbox" do |v|
+                            v.name = "#{hostname}"
+                    end
+                    node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/target_host_installation.sh"
+            end
+          end
+        end
 
-	config.vm.define COMPUTE_NAME do |compute|
-		compute.vm.hostname = COMPUTE_NAME
-		compute.vm.network :private_network, ip: COMPUTE_IP 
-		compute.vm.provider "virtualbox" do |v|
-			v.name = COMPUTE_NAME
-		end
-	end
-
-	config.vm.define DEPLOYMENT_CLIENT_NAME do |client|
-		client.vm.hostname = DEPLOYMENT_CLIENT_NAME
-		client.vm.network :private_network, ip: DEPLOYMENT_CLIENT_IP 
-		client.vm.provider "virtualbox" do |v|
-			v.name = DEPLOYMENT_CLIENT_NAME
-		end
-	end
+	config.vm.define DEPLOYMENT_HOST_NAME do |client|
+	  client.vm.hostname = DEPLOYMENT_HOST_NAME
+          client.vm.network :private_network, ip: "#{BR_MGMT_IP}#{DEPLOYMENT_HOST_IP}", :netmask => "255.255.255.0"
+	  client.vm.provider "virtualbox" do |v|
+	    v.name = DEPLOYMENT_HOST_NAME
+	  end
+	  client.vm.provision "shell", privileged: true, reboot: true, path: "scripts/deployment_host_installation.sh"
+          client.trigger.after :up do |t|
+            t.info = "Uploading SSH Public Key To Target Hosts"
+            t.run = { inline: "bash scripts/authorize_ssh_key.sh #{hostnames.join(' ')}" }
+          end
+        end
 
 end
