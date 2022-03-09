@@ -1,2 +1,4 @@
 .vagrant
 id_rsa.pub
+hosts
+playbooks/hosts.ini

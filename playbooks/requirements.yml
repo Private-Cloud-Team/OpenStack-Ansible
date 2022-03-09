@@ -1,0 +1,5 @@
+- name: galera_server
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-galera_server
+  version: master
+  trackbranch: master
