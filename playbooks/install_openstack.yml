@@ -1,5 +1,9 @@
-- name: test ping
-  hosts: all
-  tasks:
-    - name: Ping
-      ping:
+- name: Install Galera server
+  hosts: ControllerNode
+  user: root
+  roles:
+    - galera_server
+  vars:
+    galera_install_server: true
+    galera_install_client: true
+    galera_root_password: secrete

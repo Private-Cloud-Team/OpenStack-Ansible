@@ -1,3 +1,8 @@
+- name: apt_package_pinning
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-apt_package_pinning
+  version: master
+  trackbranch: master
 - name: galera_server
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-galera_server
