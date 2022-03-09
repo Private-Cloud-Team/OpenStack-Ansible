@@ -3,7 +3,7 @@ MEM = 1024
 CPU = 1
 DEPLOYMENT_HOST_NAME = "DeploymentHost"
 DEPLOYMENT_HOST_IP = 9
-BR_MGMT_IP = "192.168.42."
+BR_MGMT_IP = "192.168.56."
 
 nodes = {
   'ControllerNode' => [1, 10],

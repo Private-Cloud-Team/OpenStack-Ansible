@@ -6,5 +6,6 @@
   vars:
     galera_install_server: true
     galera_install_client: true
+    galera_cluster_members: "{{ groups['ControllerNode'] }}"
     galera_root_password: secrete
   become: yes

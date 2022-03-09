@@ -1,3 +1,8 @@
+- name: systemd_service
+  src: https://opendev.org/openstack/ansible-role-systemd_service
+  scm: git
+  version: master
+  trackbranch: master
 - name: apt_package_pinning
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-apt_package_pinning
