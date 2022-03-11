@@ -14,3 +14,6 @@ collections:
   - name: https://github.com/ansible-collections/community.crypto
     version: 1.9.5
     type: git
+  - name: https://github.com/ansible-collections/ansible.posix
+    version: 1.3.0
+    type: git
