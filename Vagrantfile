@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
     count.times do |i|
       hostname = "%s-%02d" % [name, (i+1)]
       hostnames.push(hostname)
-      File.write('playbooks/hosts.ini', "#{hostname}#{$/}", mode: 'a')
+      File.write('playbooks/hosts.ini', "#{hostname} ansible_host=#{BR_MGMT_IP}#{ip+i}#{$/}", mode: 'a')
       File.write('hosts', "#{BR_MGMT_IP}#{ip+i} #{hostname}#{$/}", mode: 'a')
       config.vm.define "#{hostname}" do |node|
         node.vm.hostname = "#{hostname}"
