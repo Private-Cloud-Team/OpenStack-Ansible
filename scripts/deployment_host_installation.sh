@@ -2,6 +2,8 @@
 #dnf upgrade -y
 dnf install epel-release -y
 dnf install ansible -y
+pip3 install Jinja2==2.11
+pip3 install netaddr
 systemctl stop firewalld
 systemctl mask firewalld
 mkdir /root/.ssh
