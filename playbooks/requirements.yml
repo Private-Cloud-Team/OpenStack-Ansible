@@ -13,6 +13,9 @@
   src: https://opendev.org/openstack/openstack-ansible-galera_server
   version: master
   trackbranch: master
+- name: memcached_server
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-memcached_server
 - name: pki
   src: https://opendev.org/openstack/ansible-role-pki
   scm: git
