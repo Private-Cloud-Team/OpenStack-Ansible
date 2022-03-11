@@ -9,3 +9,8 @@
     galera_cluster_members: "{{ groups['ControllerNode'] }}"
     galera_root_password: secrete
   become: yes
+- name: Install Memcached
+  hosts: memcached
+  user: vagrant
+  roles:
+    - { role: "memcached_server" }
