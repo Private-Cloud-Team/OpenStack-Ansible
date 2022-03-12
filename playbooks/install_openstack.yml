@@ -1,3 +1,11 @@
+- name: Create OpenStack openrc and clouds.yaml file
+  hosts: all
+  user: vagrant
+  roles:
+    - role: "openstack_openrc"
+  vars:
+    openrc_os_password: secrete
+  become: yes
 - name: Install RabbitMQ server
   hosts: all
   user: vagrant
