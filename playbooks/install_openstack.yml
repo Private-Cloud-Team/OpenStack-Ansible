@@ -1,22 +1,31 @@
-- name: Create OpenStack openrc and clouds.yaml file
-  hosts: all
-  user: vagrant
-  roles:
-    - role: "openstack_openrc"
-  vars:
-    openrc_os_password: secrete
-  become: yes
-- name: Install RabbitMQ server
-  hosts: all
-  user: vagrant
-  tags:
-    - rabbitmq
-  roles:
-    - { role: "rabbitmq_server", tags: [ "rabbitmq-server" ] }
-  vars:
-    rabbitmq_host_group: all
-    rabbitmq_cookie_token: secrete
-  become: yes
+- name: Assign nodes to appropriate groups
+  hosts: localhost
+  tasks:
+    - name : Assign ControllerNodes to appropriate groups
+      add_host:
+        name: '{{ item }}'
+        groups:
+          - galera_all
+          - haproxy
+          - memcached
+          - rabbitmq_all
+          - horizon_all
+          - keystone_all
+      with_items: "{{ groups['ControllerNode'] }}"
+    - name : Assign ComputeNodes to appropriate groups
+      add_host:
+        name: '{{ item }}'
+        groups:
+          - rabbitmq_all
+          - nova_all
+          - nova_api_metadata
+          - nova_api_os_compute
+          - nova_cert
+          - nova_compute
+          - nova_conductor
+          - nova_console
+          - nova_scheduler
+      with_items: "{{ groups['ComputeNode'] }}"
 - name: Install haproxy
   hosts: ControllerNode
   user: vagrant
@@ -39,6 +48,12 @@
           haproxy_backend_arguments:
             - 'http-check expect string OK'
   become: yes
+- name: Install Memcached
+  hosts: ControllerNode
+  user: vagrant
+  roles:
+    - { role: "memcached_server" }
+  become: yes
 - name: Install Galera server
   hosts: ControllerNode
   user: vagrant
@@ -50,9 +65,65 @@
     galera_cluster_members: "{{ groups['ControllerNode'] }}"
     galera_root_password: secrete
   become: yes
-- name: Install Memcached
+- name: Install RabbitMQ server
+  hosts: all
+  user: vagrant
+  tags:
+    - rabbitmq
+  roles:
+    - { role: "rabbitmq_server", tags: [ "rabbitmq-server" ] }
+  vars:
+    rabbitmq_host_group: all
+    rabbitmq_cookie_token: secrete
+  become: yes
+- name: Create OpenStack openrc and clouds.yaml file
+  hosts: localhost
+  user: vagrant
+  roles:
+    - role: "openstack_openrc"
+  vars:
+    openrc_os_auth_url: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    openrc_os_password: secrete
+  become: yes
+- name: Installation and setup of Keystone
   hosts: ControllerNode
   user: vagrant
   roles:
-    - { role: "memcached_server" }
+    - { role: "os_keystone", tags: [ "os-keystone" ] }
+  vars:
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+
+    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}" 
+    keystone_galera_database: keystone
+    keystone_developer_mode: true
+    keystone_git_install_branch: master
+    keystone_auth_admin_password: "secrete"
+    keystone_oslomsg_rpc_password: "secrete"
+    keystone_oslomsg_notify_password: "secrete"
+    keystone_container_mysql_password: "secrete"
+    keystone_oslomsg_rpc_transport: rabbit
+    keystone_oslomsg_rpc_servers: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_oslomsg_rpc_port: 5671
+    keystone_oslomsg_rpc_use_ssl: true
+    keystone_oslomsg_rpc_userid: keystone
+    keystone_oslomsg_rpc_vhost: /keystone
+    keystone_oslomsg_notify_transport: rabbit
+    keystone_oslomsg_notify_servers: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_oslomsg_notify_port: 5671
+    keystone_oslomsg_notify_use_ssl: true
+    keystone_oslomsg_notify_userid: keystone
+    keystone_oslomsg_notify_vhost: /keystone
+    galera_client_drop_config_file: false
+    galera_root_user: root
+    galera_root_password: secrete
+    keystone_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_memcached_servers: "127.0.0.1:11211"
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
   become: yes

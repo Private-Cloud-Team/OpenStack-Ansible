@@ -2,9 +2,7 @@
 #dnf upgrade -y
 dnf install epel-release -y
 dnf install ansible -y
-pip3 install jmespath
-pip3 install Jinja2==2.11
-pip3 install netaddr
+pip3 install "openstacksdk>=0.36" "pymysql==0.9.3" "jmespath" "Jinja2==2.11" "netaddr"
 systemctl stop firewalld
 systemctl mask firewalld
 mkdir /root/.ssh
