@@ -36,3 +36,18 @@
   src: https://opendev.org/openstack/openstack-ansible-openstack_openrc
   version: master
   trackbranch: master
+- name: uwsgi
+  src: https://opendev.org/openstack/ansible-role-uwsgi
+  scm: git
+  version: master
+  trackbranch: master
+- name: python_venv_build
+  src: https://opendev.org/openstack/ansible-role-python_venv_build
+  scm: git
+  version: master
+  trackbranch: master
+- name: os_keystone
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_keystone
+  version: master
+  trackbranch: master
