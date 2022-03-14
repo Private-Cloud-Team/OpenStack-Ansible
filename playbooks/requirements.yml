@@ -51,3 +51,8 @@
   src: https://opendev.org/openstack/openstack-ansible-os_keystone
   version: master
   trackbranch: master
+- name: os_horizon
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_horizon
+  version: master
+  trackbranch: master
