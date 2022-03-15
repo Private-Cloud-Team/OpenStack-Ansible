@@ -26,28 +26,6 @@
           - nova_console
           - nova_scheduler
       with_items: "{{ groups['ComputeNode'] }}"
-- name: Install haproxy
-  hosts: ControllerNode
-  user: vagrant
-  roles:
-    - { role: "haproxy_server", tags: [ "haproxy-server" ] }
-  vars:
-    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}" 
-    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
-    haproxy_service_configs:
-      - service:
-          haproxy_service_name: ControllerNode
-          haproxy_backend_nodes: "{{ groups['ControllerNode'] }}"
-          haproxy_backup_nodes: "{{ [] }}"
-          haproxy_port: 80
-          haproxy_balance_type: http
-          haproxy_backend_options:
-            - "forwardfor"
-            - "httpchk"
-            - "httplog"
-          haproxy_backend_arguments:
-            - 'http-check expect string OK'
-  become: yes
 - name: Install Memcached
   hosts: ControllerNode
   user: vagrant
@@ -139,7 +117,7 @@
     horizon_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     horizon_container_mysql_password: "secrete"
     horizon_secret_key: "secrete"
-    horizon_external_ssl: true
+    horizon_external_ssl: false
     rabbitmq_servers: rabbitmq_all
     rabbitmq_use_ssl: false
     rabbitmq_port: 5671
@@ -158,14 +136,4 @@
     memcached_encryption_key: "secrete"
     galera_root_user: root
     galera_root_password: secrete
-    horizon_listen_ports:
-      http: "8080"
-      https: "443"
-    #horizon_custom_uploads:
-    #  logo:
-    #    src: "../logo.png"
-    #    dest: "img/logo.png"
-    #  logo_splash:
-    #    src: "../logo.png"
-    #    dest: "img/logo-splash.png"
   become: yes
