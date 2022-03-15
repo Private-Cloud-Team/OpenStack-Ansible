@@ -56,3 +56,8 @@
   src: https://opendev.org/openstack/openstack-ansible-os_horizon
   version: master
   trackbranch: master
+- name: os_neutron
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_neutron
+  version: master
+  trackbranch: master

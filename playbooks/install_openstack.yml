@@ -11,6 +11,8 @@
           - rabbitmq_all
           - horizon_all
           - keystone_all
+          - neutron_all
+          - neutron_ovn_northd
       with_items: "{{ groups['ControllerNode'] }}"
     - name : Assign ComputeNodes to appropriate groups
       add_host:
@@ -104,6 +106,28 @@
         pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
         priority: 0
         tags: "ha-mode=all"
+  become: yes
+- name: Installation and setup of Neutron
+  hosts: neutron_all
+  user: vagrant
+  roles:
+    - { role: "os_neutron", tags: [ "neutron-install", "neutron-config" ] }
+  vars:
+    neutron_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}"
+    galera_root_user: root
+    galera_root_password: root
+    neutron_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    neutron_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    neutron_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    neutron_oslomsg_rpc_password: "secrete"
+    memcached_servers: "127.0.0.1:11211"
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    provider_networks: "[]"
+    is_metal: false
   become: yes
 - name: Installation and setup of horizon
   hosts: horizon_all
