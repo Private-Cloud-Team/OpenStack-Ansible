@@ -13,6 +13,7 @@
           - keystone_all
           - neutron_all
           - neutron_ovn_northd
+          - placement_all
       with_items: "{{ groups['ControllerNode'] }}"
     - name : Assign ComputeNodes to appropriate groups
       add_host:
@@ -31,7 +32,6 @@
           - glance_all
           - cinder_all
           - cinder_volume
-          - placement_all
       with_items: "{{ groups['ComputeNode'] }}"
 - name: Gather all facts
   hosts: all
@@ -122,7 +122,6 @@
     - role: os_placement
   vars:
     memcached_servers: "127.0.0.1:11211"
-    keystone_service_internaluri_insecure: False
     keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
     keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
     keystone_service_internaluri: "{{ keystone_service_adminuri }}"
@@ -132,7 +131,13 @@
     placement_service_password: "secrete"
     keystone_service_region: "RegionOne"
     memcached_encryption_key: "secrete"
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}"
+    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    placement_galera_address: "{{ internal_lb_vip_address }}"
     placement_galera_password: "secrete"
+    placement_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_service_internaluri_insecure: False
+    keystone_service_adminuri_insecure: False
   become: yes
 - name: Install glance server
   hosts: glance_all
