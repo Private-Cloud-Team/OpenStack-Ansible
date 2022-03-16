@@ -27,6 +27,7 @@
           - nova_conductor
           - nova_console
           - nova_scheduler
+          - glance_all
       with_items: "{{ groups['ComputeNode'] }}"
 - name: Install Memcached
   hosts: ControllerNode
@@ -100,12 +101,44 @@
     keystone_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     keystone_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     keystone_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
-    keystone_memcached_servers: "127.0.0.1:11211"
+    memcached_servers: "127.0.0.1:11211"
     oslomsg_rpc_policies: 
       - name: "HA"
         pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
         priority: 0
         tags: "ha-mode=all"
+  become: yes
+- name: Install glance server
+  hosts: glance_all
+  user: vagrant
+  roles:
+    - { role: "os_glance", tags: [ "os-glance" ] }
+  vars:
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+
+    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    glance_galera_address: "{{ internal_lb_vip_address }}"
+    galera_root_user: root
+    galera_root_password: root
+    glance_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    glance_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    glance_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    memcached_servers: "127.0.0.1:11211"
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    keystone_service_internaluri_insecure: False
+    glance_oslomsg_rpc_password: "secrete"
+    glance_container_mysql_password: "secrete"
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    glance_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
   become: yes
 - name: Installation and setup of Neutron
   hosts: neutron_all
