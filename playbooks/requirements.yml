@@ -81,3 +81,7 @@
   src: https://opendev.org/openstack/openstack-ansible-os_placement
   version: master
   trackbranch: master
+- name: os_nova
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_nova
+  version: master

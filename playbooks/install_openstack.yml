@@ -19,6 +19,7 @@
         name: '{{ item }}'
         groups:
           - rabbitmq_all
+          - memcached
           - nova_all
           - nova_api_metadata
           - nova_api_os_compute
@@ -32,14 +33,17 @@
           - cinder_volume
           - placement_all
       with_items: "{{ groups['ComputeNode'] }}"
+- name: Gather all facts
+  hosts: all
+  gather_facts: true
 - name: Install Memcached
-  hosts: ControllerNode
+  hosts: memcached
   user: vagrant
   roles:
     - { role: "memcached_server" }
   become: yes
 - name: Install Galera server
-  hosts: ControllerNode
+  hosts: galera_all
   user: vagrant
   roles:
     - galera_server
@@ -50,7 +54,7 @@
     galera_root_password: secrete
   become: yes
 - name: Install RabbitMQ server
-  hosts: all
+  hosts: rabbitmq_all
   user: vagrant
   tags:
     - rabbitmq
@@ -70,7 +74,7 @@
     openrc_os_password: secrete
   become: yes
 - name: Installation and setup of Keystone
-  hosts: ControllerNode
+  hosts: keystone_all
   user: vagrant
   roles:
     - { role: "os_keystone", tags: [ "os-keystone" ] }
@@ -192,6 +196,54 @@
     keystone_service_internaluri: "{{ keystone_service_adminuri }}"
     keystone_service_internalurl: "{{ keystone_service_adminurl }}"
     cinder_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
+  become: yes
+- name: Add root@hostname user to gallera
+  hosts: ControllerNode
+  user: vagrant
+  tasks:
+    - name: adding galera user
+      community.mysql.mysql_user:
+        name: "root"
+        host: "{{ groups['ControllerNode'][0] }}"
+        password: "secrete"
+        priv: "*.*:ALL,GRANT"
+        state: "present"
+  become: yes
+- name: Installation and setup of Nova
+  hosts: nova_all
+  user: vagrant
+  roles:
+    - { role: "os_nova", tags: [ "os-nova" ] }
+  vars:
+    nova_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    galera_root_user: root
+    galera_root_password: secrete
+    nova_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    nova_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    nova_container_mysql_password: secrete
+    nova_api_container_mysql_password: secrete
+    nova_oslomsg_rpc_password: secrete
+    oslomsg_rpc_policies:
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    oslomsg_notify_policies: "{{ oslomsg_rpc_policies }}"
+    nova_libvirtd_listen_tls: 0
+    nova_qemu_vnc_tls: 0
+    memcached_servers: "127.0.0.1:11211"
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    keystone_service_internaluri_insecure: False
+    nova_service_password: "secrete"
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    keystone_service_adminuri_insecure: False
+    nova_metadata_proxy_secret: "secrete"
     keystone_service_region: "RegionOne"
     memcached_encryption_key: "secrete"
   become: yes
