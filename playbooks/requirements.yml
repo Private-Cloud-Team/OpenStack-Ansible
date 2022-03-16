@@ -51,3 +51,11 @@
   src: https://opendev.org/openstack/openstack-ansible-os_keystone
   version: master
   trackbranch: master
+- name: os_nova
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_nova
+  version: master
+- name: ceph_client
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-ceph_client
+  version: master
