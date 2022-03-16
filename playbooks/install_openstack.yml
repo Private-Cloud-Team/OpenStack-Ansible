@@ -11,12 +11,15 @@
           - rabbitmq_all
           - horizon_all
           - keystone_all
+          - neutron_all
+          - neutron_ovn_northd
       with_items: "{{ groups['ControllerNode'] }}"
     - name : Assign ComputeNodes to appropriate groups
       add_host:
         name: '{{ item }}'
         groups:
           - rabbitmq_all
+          - memcached
           - nova_all
           - nova_api_metadata
           - nova_api_os_compute
@@ -25,18 +28,22 @@
           - nova_conductor
           - nova_console
           - nova_scheduler
+          - glance_all
+          - cinder_all
+          - cinder_volume
+          - placement_all
       with_items: "{{ groups['ComputeNode'] }}"
 - name: Gather all facts
   hosts: all
   gather_facts: true
 - name: Install Memcached
-  hosts: ControllerNode
+  hosts: memcached
   user: vagrant
   roles:
     - { role: "memcached_server" }
   become: yes
 - name: Install Galera server
-  hosts: ControllerNode
+  hosts: galera_all
   user: vagrant
   roles:
     - galera_server
@@ -47,7 +54,7 @@
     galera_root_password: secrete
   become: yes
 - name: Install RabbitMQ server
-  hosts: all
+  hosts: rabbitmq_all
   user: vagrant
   tags:
     - rabbitmq
@@ -67,7 +74,7 @@
     openrc_os_password: secrete
   become: yes
 - name: Installation and setup of Keystone
-  hosts: ControllerNode
+  hosts: keystone_all
   user: vagrant
   roles:
     - { role: "os_keystone", tags: [ "os-keystone" ] }
@@ -101,12 +108,96 @@
     keystone_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     keystone_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     keystone_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
-    keystone_memcached_servers: "127.0.0.1:11211"
+    memcached_servers: "127.0.0.1:11211"
     oslomsg_rpc_policies: 
       - name: "HA"
         pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
         priority: 0
         tags: "ha-mode=all"
+  become: yes
+- name: Install placement components
+  hosts: placement_all
+  user: vagrant
+  roles:
+    - role: os_placement
+  vars:
+    memcached_servers: "127.0.0.1:11211"
+    keystone_service_internaluri_insecure: False
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    keystone_service_publicuri: "{{ keystone_service_adminuri }}"
+    keystone_service_publicurl: "{{ keystone_service_adminurl }}"
+    placement_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
+    placement_galera_password: "secrete"
+  become: yes
+- name: Install glance server
+  hosts: glance_all
+  user: vagrant
+  roles:
+    - { role: "os_glance", tags: [ "os-glance" ] }
+  vars:
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+
+    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    glance_galera_address: "{{ internal_lb_vip_address }}"
+    galera_root_user: root
+    galera_root_password: root
+    glance_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    glance_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    glance_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    memcached_servers: "127.0.0.1:11211"
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    keystone_service_internaluri_insecure: False
+    glance_oslomsg_rpc_password: "secrete"
+    glance_container_mysql_password: "secrete"
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    glance_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
+  become: yes
+- name: Installation and setup of cinder
+  hosts: cinder_all
+  user: vagrant
+  roles:
+    - { role: "os_cinder", tags: [ "os-cinder" ] }
+  vars:
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    cinder_glance_api_servers: "http://{{ hostvars[groups['glance_all'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}:9292"
+    cinder_galera_address: "{{ internal_lb_vip_address }}"
+    galera_root_user: root
+    galera_root_password: "secreet"
+    cinder_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    cinder_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    cinder_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    memcached_servers: "127.0.0.1:11211"
+    debug: False
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    cinder_container_mysql_password: "secrete"
+    cinder_oslomsg_rpc_password: "secrete"
+    cinder_profiler_hmac_key: "secrete"
+    keystone_service_internaluri_insecure: False
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    cinder_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
   become: yes
 - name: Add root@hostname user to gallera
   hosts: ControllerNode
@@ -155,4 +246,58 @@
     nova_metadata_proxy_secret: "secrete"
     keystone_service_region: "RegionOne"
     memcached_encryption_key: "secrete"
+  become: yes
+- name: Installation and setup of Neutron
+  hosts: neutron_all
+  user: vagrant
+  roles:
+    - { role: "os_neutron", tags: [ "neutron-install", "neutron-config" ] }
+  vars:
+    neutron_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}"
+    galera_root_user: root
+    galera_root_password: root
+    neutron_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    neutron_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    neutron_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    neutron_oslomsg_rpc_password: "secrete"
+    memcached_servers: "127.0.0.1:11211"
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    provider_networks: "[]"
+    is_metal: false
+  become: yes
+- name: Installation and setup of horizon
+  hosts: horizon_all
+  user: vagrant
+  roles:
+    - { role: "os_horizon", tags: [ "os-horizon" ] }
+  vars:
+    galera_client_drop_config_file: false
+    external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    horizon_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    horizon_container_mysql_password: "secrete"
+    horizon_secret_key: "secrete"
+    horizon_external_ssl: false
+    rabbitmq_servers: rabbitmq_all
+    rabbitmq_use_ssl: false
+    rabbitmq_port: 5671
+    keystone_admin_user_name: admin
+    keystone_auth_admin_password: "secrete"
+    keystone_admin_tenant_name: admin
+    keystone_service_adminuri_insecure: false
+    keystone_service_internaluri_insecure: false
+    keystone_service_internaluri: "http://{{ internal_lb_vip_address }}:5000"
+    keystone_service_internalurl: "{{ keystone_service_internaluri }}/v3"
+    keystone_service_adminuri: "http://{{ internal_lb_vip_address }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    openrc_os_password: "{{ keystone_auth_admin_password }}"
+    openrc_os_domain_name: "Default"
+    memcached_servers: "127.0.0.1:11211"
+    memcached_encryption_key: "secrete"
+    galera_root_user: root
+    galera_root_password: secrete
   become: yes

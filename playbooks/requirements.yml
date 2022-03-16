@@ -51,11 +51,37 @@
   src: https://opendev.org/openstack/openstack-ansible-os_keystone
   version: master
   trackbranch: master
-- name: os_nova
+- name: os_horizon
   scm: git
-  src: https://opendev.org/openstack/openstack-ansible-os_nova
+  src: https://opendev.org/openstack/openstack-ansible-os_horizon
   version: master
+  trackbranch: master
+- name: os_neutron
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_neutron
+  version: master
+  trackbranch: master
 - name: ceph_client
   scm: git
   src: https://opendev.org/openstack/openstack-ansible-ceph_client
+  version: master
+  trackbranch: master
+- name: os_glance
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_glance
+  version: master
+  trackbranch: master
+- name: os_cinder
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_cinder
+  version: master
+  trackbranch: master
+- name: os_placement
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_placement
+  version: master
+  trackbranch: master
+- name: os_nova
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_nova
   version: master
