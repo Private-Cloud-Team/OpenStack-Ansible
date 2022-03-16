@@ -71,3 +71,8 @@
   src: https://opendev.org/openstack/openstack-ansible-os_glance
   version: master
   trackbranch: master
+- name: os_cinder
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_cinder
+  version: master
+  trackbranch: master

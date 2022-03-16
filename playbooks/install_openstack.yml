@@ -28,6 +28,8 @@
           - nova_console
           - nova_scheduler
           - glance_all
+          - cinder_all
+          - cinder_volume
       with_items: "{{ groups['ComputeNode'] }}"
 - name: Install Memcached
   hosts: ControllerNode
@@ -137,6 +139,39 @@
     keystone_service_internaluri: "{{ keystone_service_adminuri }}"
     keystone_service_internalurl: "{{ keystone_service_adminurl }}"
     glance_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
+  become: yes
+- name: Installation and setup of cinder
+  hosts: cinder_all
+  user: vagrant
+  roles:
+    - { role: "os_cinder", tags: [ "os-cinder" ] }
+  vars:
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    cinder_glance_api_servers: "http://{{ hostvars[groups['glance_all'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}:9292"
+    cinder_galera_address: "{{ internal_lb_vip_address }}"
+    galera_root_user: root
+    galera_root_password: "secreet"
+    cinder_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    cinder_oslomsg_rpc_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    cinder_oslomsg_notify_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
+    memcached_servers: "127.0.0.1:11211"
+    debug: False
+    oslomsg_rpc_policies: 
+      - name: "HA"
+        pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
+        priority: 0
+        tags: "ha-mode=all"
+    cinder_container_mysql_password: "secrete"
+    cinder_oslomsg_rpc_password: "secrete"
+    cinder_profiler_hmac_key: "secrete"
+    keystone_service_internaluri_insecure: False
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    cinder_service_password: "secrete"
     keystone_service_region: "RegionOne"
     memcached_encryption_key: "secrete"
   become: yes
