@@ -30,6 +30,7 @@
           - glance_all
           - cinder_all
           - cinder_volume
+          - placement_all
       with_items: "{{ groups['ComputeNode'] }}"
 - name: Install Memcached
   hosts: ControllerNode
@@ -109,6 +110,25 @@
         pattern: '^(?!(amq\.)|(.*_fanout_)|(reply_)).*'
         priority: 0
         tags: "ha-mode=all"
+  become: yes
+- name: Install placement components
+  hosts: placement_all
+  user: vagrant
+  roles:
+    - role: os_placement
+  vars:
+    memcached_servers: "127.0.0.1:11211"
+    keystone_service_internaluri_insecure: False
+    keystone_service_adminuri: "http://{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}:5000"
+    keystone_service_adminurl: "{{ keystone_service_adminuri }}/v3"
+    keystone_service_internaluri: "{{ keystone_service_adminuri }}"
+    keystone_service_internalurl: "{{ keystone_service_adminurl }}"
+    keystone_service_publicuri: "{{ keystone_service_adminuri }}"
+    keystone_service_publicurl: "{{ keystone_service_adminurl }}"
+    placement_service_password: "secrete"
+    keystone_service_region: "RegionOne"
+    memcached_encryption_key: "secrete"
+    placement_galera_password: "secrete"
   become: yes
 - name: Install glance server
   hosts: glance_all

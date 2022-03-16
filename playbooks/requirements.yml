@@ -76,3 +76,8 @@
   src: https://opendev.org/openstack/openstack-ansible-os_cinder
   version: master
   trackbranch: master
+- name: os_placement
+  scm: git
+  src: https://opendev.org/openstack/openstack-ansible-os_placement
+  version: master
+  trackbranch: master
