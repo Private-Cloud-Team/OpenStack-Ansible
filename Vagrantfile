@@ -1,13 +1,13 @@
 IMAGE = "centos/stream8"
-MEM = 1024
-CPU = 1
+MEM = 2048
+CPU = 2
 DEPLOYMENT_HOST_NAME = "DeploymentHost"
 DEPLOYMENT_HOST_IP = 9
 BR_MGMT_IP = "192.168.56."
 
 nodes = {
   'ControllerNode' => [1, 10],
-  'ComputeNode' => [1, 100],
+  #'ComputeNode' => [1, 100],
   #'StorageNode' => [1, 200]
 }
 
