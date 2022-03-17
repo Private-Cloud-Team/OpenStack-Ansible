@@ -132,9 +132,9 @@
     placement_service_password: "secrete"
     keystone_service_region: "RegionOne"
     memcached_encryption_key: "secrete"
-    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}"
+    internal_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     external_lb_vip_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
-    placement_galera_address: "{{ internal_lb_vip_address }}"
+    placement_galera_address: "{{ hostvars[groups['ControllerNode'][0]]['ansible_facts']['eth0']['ipv4']['address'] }}"
     placement_galera_password: "secrete"
     placement_db_setup_host: "{{ hostvars[groups['ControllerNode'][0]]['ansible_host'] }}"
     keystone_service_internaluri_insecure: False
