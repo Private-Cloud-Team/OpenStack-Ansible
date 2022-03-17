@@ -14,6 +14,7 @@
           - neutron_all
           - neutron_ovn_northd
           - placement_all
+          - placement_api
       with_items: "{{ groups['ControllerNode'] }}"
     - name : Assign ComputeNodes to appropriate groups
       add_host:
