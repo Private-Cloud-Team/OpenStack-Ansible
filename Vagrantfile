@@ -1,8 +1,10 @@
 IMAGE = "centos/stream8"
-MEM = 2048
-CPU = 2
+MEM = 6048
+CPU = 3
 DEPLOYMENT_HOST_NAME = "DeploymentHost"
 DEPLOYMENT_HOST_IP = 9
+MEM_HOST = 1024
+CPU_HOST = 1
 BR_MGMT_IP = "192.168.56."
 
 nodes = {
@@ -48,6 +50,10 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define DEPLOYMENT_HOST_NAME do |client|
+    client.vm.provider "virtualbox" do |vb|
+      vb.memory = MEM_HOST
+      vb.cpus = CPU_HOST
+    end
     client.vm.hostname = DEPLOYMENT_HOST_NAME
     client.vm.network :private_network, ip: "#{BR_MGMT_IP}#{DEPLOYMENT_HOST_IP}", :netmask => "255.255.255.0"
     client.vm.provider "virtualbox" do |v|
