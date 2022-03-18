@@ -1,6 +1,7 @@
 IMAGE = "centos/stream8"
 MEM = 6048
-CPU = 3
+CPU = 2
+SIZE = '100GB'
 DEPLOYMENT_HOST_NAME = "DeploymentHost"
 DEPLOYMENT_HOST_IP = 9
 MEM_HOST = 1024
@@ -39,6 +40,7 @@ Vagrant.configure("2") do |config|
       File.write('playbooks/hosts.ini', "#{hostname} ansible_host=#{BR_MGMT_IP}#{ip+i}#{$/}", mode: 'a')
       File.write('hosts', "#{BR_MGMT_IP}#{ip+i} #{hostname}#{$/}", mode: 'a')
       config.vm.define "#{hostname}" do |node|
+        node.disksize.size = SIZE
         node.vm.hostname = "#{hostname}"
         node.vm.network :private_network, ip: "#{BR_MGMT_IP}#{ip+i}", :netmask => "255.255.255.0"
         node.vm.provider "virtualbox" do |v|
