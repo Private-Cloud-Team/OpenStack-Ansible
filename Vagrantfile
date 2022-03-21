@@ -1,7 +1,10 @@
+IDE_CONTROLLER = 'IDE'
 IMAGE = "centos/stream8"
 MEM = 6048
 CPU = 2
-SIZE = '100GB'
+SIZE = '30GB'
+LVM_DISK_SIZE = 100 * 1024
+FILE_TO_DISK = 'lvm_disk.vdi'
 DEPLOYMENT_HOST_NAME = "DeploymentHost"
 DEPLOYMENT_HOST_IP = 9
 MEM_HOST = 1024
@@ -45,6 +48,10 @@ Vagrant.configure("2") do |config|
         node.vm.network :private_network, ip: "#{BR_MGMT_IP}#{ip+i}", :netmask => "255.255.255.0"
         node.vm.provider "virtualbox" do |v|
           v.name = "#{hostname}"
+          unless File.exist?(FILE_TO_DISK)
+            v.customize ['createhd', '--filename', FILE_TO_DISK, '--size', LVM_DISK_SIZE]
+          end
+          v.customize ['storageattach', :id, '--storagectl', IDE_CONTROLLER, '--port', 1, '--device', 0, '--type', 'hdd', '--medium', FILE_TO_DISK]
         end
         node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/target_host_installation.sh"
       end

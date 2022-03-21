@@ -217,7 +217,14 @@
     keystone_service_region: "RegionOne"
     memcached_encryption_key: "secrete"
     openrc_os_password: "secrete"
-    is_metal: False
+    cinder_backends:
+      lvm:
+        volume_group: cinder-volumes
+        volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+        volume_backend_name: LVM_iSCSI
+        extra_volume_types:
+          - lvm_high_iops
+          - lvm_low_iops
   become: yes
 - name: Add root@hostname user to gallera
   hosts: ControllerNode
