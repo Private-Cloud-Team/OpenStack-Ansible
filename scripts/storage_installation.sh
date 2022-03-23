@@ -1,3 +1,4 @@
+#!/bin/bash
 ## kmod-devel nedeed by Cinder ##
 dnf --enablerepo=powertools install kmod-devel -y
 
