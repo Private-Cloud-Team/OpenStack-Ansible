@@ -1,0 +1,17 @@
+- name: Create logs directory
+  file:
+      path: "/logs"
+      state: directory
+      owner: root
+      group: root
+      mode: 0700
+
+- name: Setup Hosts
+  shell: "/usr/local/bin/openstack-ansible setup-hosts.yml > /logs/setup-hosts.log"
+  args:
+      chdir: "/opt/openstack-ansible/playbooks"
+
+- name: Setup Infrastructure
+  shell: "/usr/local/bin/openstack-ansible setup-infrastructure.yml > /logs/setup-infrastructure.log"
+  args:
+      chdir: "/opt/openstack-ansible/playbooks"

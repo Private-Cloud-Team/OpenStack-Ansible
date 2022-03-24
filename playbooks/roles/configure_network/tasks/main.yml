@@ -8,12 +8,15 @@
 
 - name: Copy all configs to backup directory
   shell: "cp -r {{ ifcg_directory }}/ifcfg-* {{ ifcg_directory }}/backup/"
+  ignore_errors: yes
 
 - name: Delete configuration of the interfaces will be used for creating vlans
   shell: "rm {{ ifcg_directory }}/ifcfg-{{ interface_name }}"
+  ignore_errors: yes
 
 - name: Delete configuration of the interfaces not needed
   shell: "rm {{ ifcg_directory }}/ifcfg-en*"
+  ignore_errors: yes
 
 - name: Configure physical device interface
   template:

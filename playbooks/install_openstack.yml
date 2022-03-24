@@ -1,6 +1,33 @@
 - name: Configure Network For OpenStack
-  hosts: AllNodes
+  hosts: all
   user: vagrant
   roles:
-      - { role: "configure_network", ext_interface_name: "eth1", interface_name: "eth2", tags: ['configure-network'] }
+      - {
+          role: "configure_network",
+          ext_interface_name: "eth1",
+          interface_name: "eth2",
+          gateway: "10.0.2.2",
+          dns: "10.0.2.3",
+          tags: ['configure-network']
+        }
+  become: yes
+
+- name: Configure Deployment
+  hosts: local
+  roles:
+      - {
+          role: "configure_os_ansible",
+          user_config_path: "/vagrant/openstack_user_config.yml",
+          user_variables_path: "/vagrant/user_variables.yml",
+          tags: ['configure_os_ansible']
+        }
+  become: yes
+
+- name: Install OpenStack
+  hosts: local
+  roles:
+      - {
+          role: "install_os_ansible",
+          tags: ['install_os_ansible']
+        }
   become: yes

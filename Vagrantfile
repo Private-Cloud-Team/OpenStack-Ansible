@@ -11,8 +11,8 @@ BR_MGMT_IP = "172.29.236."
 
 nodes = {
   'ControllerNode' => [1, 10,  2000, 1],
-  'ComputeNode'    => [1, 100, 2000, 1],
-  'StorageNode'    => [1, 200, 1000, 1]
+  'ComputeNode'    => [1, 20, 2000, 1],
+  'StorageNode'    => [1, 30, 1000, 1]
 }
 
 hostnames = [ DEPLOYMENT_HOST_NAME ]
@@ -89,6 +89,7 @@ Vagrant.configure("2") do |config|
 
     client.vm.hostname = DEPLOYMENT_HOST_NAME
     client.vm.network :private_network, ip: "#{HOST_IP}#{DEPLOYMENT_HOST_IP}", :netmask => "255.255.255.0"
+    client.vm.network :private_network, ip: "#{BR_MGMT_IP}#{DEPLOYMENT_HOST_IP}", :netmask => "255.255.252.0"
 
     client.vm.provider "virtualbox" do |v|
       v.name = DEPLOYMENT_HOST_NAME
