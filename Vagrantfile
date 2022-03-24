@@ -1,6 +1,7 @@
 IDE_CONTROLLER = 'IDE'
 IMAGE = "centos/stream8"
 LVM_DISK_SIZE = 100 * 1024
+SIZE = '100GB'
 FILE_TO_DISK = 'lvm_disk.vdi'
 DEPLOYMENT_HOST_NAME = "DeploymentHost"
 DEPLOYMENT_HOST_IP = 9
@@ -10,14 +11,18 @@ HOST_IP = "192.168.56."
 BR_MGMT_IP = "172.29.236."
 
 nodes = {
-  'ControllerNode' => [1, 10,  2000, 1],
-  'ComputeNode'    => [1, 20, 2000, 1],
-  'StorageNode'    => [1, 30, 1000, 1]
+  'ControllerNode' => [1, 10,  7000, 2],
+  'ComputeNode'    => [1, 20, 4000, 2],
+  'StorageNode'    => [1, 30, 512, 1]
 }
 
 hostnames = [ DEPLOYMENT_HOST_NAME ]
 
 Vagrant.configure("2") do |config|
+
+  unless Vagrant.has_plugin?("vagrant-disksize")
+    raise 'Please install vagrant-disksize using the command: vagrant plugin install vagrant-disksize'
+  end
 
   config.vm.box = IMAGE
   config.vm.provider "virtualbox" do |vb|
@@ -47,7 +52,7 @@ Vagrant.configure("2") do |config|
       File.write('hosts', "#{HOST_IP}#{ip+i} #{hostname}#{$/}", mode: 'a')
 
       config.vm.define "#{hostname}" do |node|
-
+        
         node.vm.hostname = "#{hostname}"
 
         node.vm.provider "virtualbox" do |v|
@@ -61,6 +66,7 @@ Vagrant.configure("2") do |config|
         node.vm.provision "shell", privileged: true, path: "scripts/common_installation.sh"
 
         if name == "ControllerNode"
+          node.disksize.size = SIZE
           node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/controller_installation.sh"
         elsif name == "ComputeNode"
           node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/compute_installation.sh"
