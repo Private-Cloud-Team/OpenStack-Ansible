@@ -15,3 +15,8 @@
   shell: "/usr/local/bin/openstack-ansible setup-infrastructure.yml > /logs/setup-infrastructure.log"
   args:
       chdir: "/opt/openstack-ansible/playbooks"
+
+- name: Setup OpenStack
+  shell: "/usr/local/bin/openstack-ansible setup-openstack.yml > /logs/setup-openstack.log"
+  args:
+      chdir: "/opt/openstack-ansible/playbooks"
