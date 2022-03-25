@@ -1,0 +1,12 @@
+- name: Publish public ssh key to nodes
+  hosts: all
+  tasks:
+      - name: Add public key to authorized_keys
+        authorized_key:
+            user: "{{ item }}"
+            state: present
+            key: "{{ lookup('file', '/home/vagrant/.ssh/id_rsa.pub') }}"
+        with_items:
+            - "root"
+            - "vagrant"
+        become: yes

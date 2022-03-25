@@ -1,0 +1,102 @@
+- name: Create bakcup directory
+  file:
+      path: "{{ ifcg_directory }}/backup"
+      state: directory
+      owner: root
+      group: root
+      mode: 0700
+
+- name: Copy all configs to backup directory
+  shell: "cp -r {{ ifcg_directory }}/ifcfg-* {{ ifcg_directory }}/backup/"
+  ignore_errors: yes
+
+- name: Delete configuration of the interfaces will be used for creating vlans
+  shell: "rm {{ ifcg_directory }}/ifcfg-{{ interface_name }}"
+  ignore_errors: yes
+
+- name: Delete configuration of the interfaces not needed
+  shell: "rm {{ ifcg_directory }}/ifcfg-en*"
+  ignore_errors: yes
+
+- name: Configure physical device interface
+  template:
+      src: ifcfg-physical.j2
+      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}"
+  vars:
+      bridge_name: "br-vlan"
+
+- name: Create vlan interface for Container/Host management
+  template:
+      src: ifcfg-vlan.j2
+      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}.{{ vlan_id }}"
+  vars:
+      vlan_id: "10"
+      bridge_name: "br-mgmt"
+
+- name: Create vlan interface for OpenStack Networking VXLAN (tunnel/overlay)
+  template:
+      src: ifcfg-vlan.j2
+      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}.{{ vlan_id }}"
+  vars:
+      vlan_id: "30"
+      bridge_name: "br-vxlan"
+
+- name: Create vlan interface for Storage network
+  template:
+      src: ifcfg-vlan.j2
+      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}.{{ vlan_id }}"
+  vars:
+      vlan_id: "20"
+      bridge_name: "br-storage"
+
+- name: Configure Management Bridge br-mgmt
+  template:
+      src: "ifcfg-br-mgmt.j2"
+      dest: "{{ ifcg_directory }}/ifcfg-br-mgmt"
+  vars:
+      ip: "{{ hostvars[inventory_hostname]['ansible_facts'][ext_interface_name]['ipv4']['address'] }}"
+
+- name: Configure Bridge br-vxlan
+  template:
+      src: "ifcfg-br-vxlan.j2"
+      dest: "{{ ifcg_directory }}/ifcfg-br-vxlan"
+  vars:
+      ip: "{{ hostvars[inventory_hostname]['ansible_facts'][ext_interface_name]['ipv4']['address'] }}"
+
+- name: Configure Bridge br-vlan
+  template:
+      src: "ifcfg-br-vlan.j2"
+      dest: "{{ ifcg_directory }}/ifcfg-br-vlan"
+
+- name: Configure Bridge br-storage
+  template:
+      src: "ifcfg-br-storage.j2"
+      dest: "{{ ifcg_directory }}/ifcfg-br-storage"
+  vars:
+      ip: "{{ hostvars[inventory_hostname]['ansible_facts'][ext_interface_name]['ipv4']['address'] }}"
+
+- name: Install the network scripts manager
+  dnf:
+    name: network-scripts
+    state: latest
+
+- name: disable NetworkManager
+  systemd:
+    name: NetworkManager
+    state: stopped
+    masked: yes
+  ignore_errors: true
+
+- name: Set network non cotrolled by NetworkManager
+  shell: "sed -i 's/NM_CONTROLLED=yes/NM_CONTROLLED=no/g' {{ ifcg_directory }}/ifcfg-*"
+
+- name: Remove dhclient
+  dnf:
+    name: dhclient
+    state: absent
+
+- name: Restart network
+  systemd:
+      name: network
+      state: restarted
+      enabled: yes
