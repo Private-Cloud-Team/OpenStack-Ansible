@@ -20,6 +20,21 @@ link : https://192.168.56.10/
 user : admin  
 password : {{ keystone_auth_admin_password }}  
 
+## OpenStack-Client
+```bash
+$ vagrant ssh DeploymentHost
+[vagrant@DeploymentHost ~]$ su
+Password: vagrant
+[root@DeploymentHost vagrant]$ source ~/openrc
+[root@DeploymentHost vagrant]$ openstack volume service list
++------------------+--------------------------------------+------+---------+-------+----------------------------+
+| Binary           | Host                                 | Zone | Status  | State | Updated At                 |
++------------------+--------------------------------------+------+---------+-------+----------------------------+
+| cinder-scheduler | infra1-cinder-api-container-055c1dee | nova | enabled | up    | 2022-03-27T12:05:09.000000 |
+| cinder-volume    | StorageNode-01@lvm                   | nova | enabled | up    | 2022-03-27T12:02:03.000000 |
++------------------+--------------------------------------+------+---------+-------+----------------------------+
+```
+
 ## ISSUES
 If you get the following error: "Could not find a controller named 'IDE'"  
 This is not a Vagrant issue.  
