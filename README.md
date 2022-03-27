@@ -6,6 +6,20 @@ vagrant plugin install vagrant-disksize
 vagrant up
 ```
 
+## Get Admin Password
+```bash
+$ vagrant ssh DeploymentHost
+[vagrant@DeploymentHost ~]$ su
+Password: vagrant
+[root@DeploymentHost vagrant]$ cat /etc/openstack_deploy/user_secrets.yml | grep keystone_auth_admin_password
+keystone_auth_admin_password: REDACTED
+```
+
+## Horizon Dashboard
+link : https://192.168.56.10/  
+user : admin  
+password : {{ keystone_auth_admin_password }}  
+
 ## ISSUES
 If you get the following error: "Could not find a controller named 'IDE'"  
 This is not a Vagrant issue.  
