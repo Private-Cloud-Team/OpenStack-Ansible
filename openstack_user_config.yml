@@ -8,14 +8,14 @@ used_ips:
   - "172.29.236.1,172.29.236.50"
   - "172.29.240.1,172.29.240.50"
   - "172.29.244.1,172.29.244.50"
-  - "192.168.56.1,192,192.168.56.50"
+  - "172.29.248.1,172.29.248.50"
+  - "192.168.56.1,192.168.56.50"
 
 global_overrides:
   # The internal and external VIP should be different IPs, however they
   # do not need to be on separate networks.
   external_lb_vip_address: 192.168.56.10
   internal_lb_vip_address: 172.29.236.10
-  tunnel_bridge: "br-vxlan"
   management_bridge: "br-mgmt"
   provider_networks:
     - network:
@@ -28,7 +28,6 @@ global_overrides:
           - all_containers
           - hosts
         is_container_address: true
-        is_ssh_address: true
     - network:
         container_bridge: "br-vxlan"
         container_type: "veth"
@@ -53,7 +52,7 @@ global_overrides:
         container_type: "veth"
         container_interface: "eth11"
         type: "vlan"
-        range: "1:1"
+        range: "101:200,301:400"
         net_name: "vlan"
         group_binds:
           - neutron_linuxbridge_agent

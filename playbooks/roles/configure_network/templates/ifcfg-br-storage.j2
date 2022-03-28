@@ -5,7 +5,6 @@ DELAY=0
 STP=off
 ONBOOT=yes
 BOOTPROTO=none
-DEFROUTE=yes
 {% if ['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0 %}
 IPADDR=172.29.244.{{ ip.split('.')[-1] }}
 NETMASK=255.255.252.0

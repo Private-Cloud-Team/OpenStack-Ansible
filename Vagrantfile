@@ -8,12 +8,12 @@ DEPLOYMENT_HOST_IP = 9
 MEM_HOST = 512
 CPU_HOST = 1
 HOST_IP = "192.168.56."
-BR_MGMT_IP = "172.29.236."
+BR_MGMT_IP = "172.29.248."
 
 nodes = {
-  'ControllerNode' => [1, 10,  7000, 2],
-  'ComputeNode'    => [1, 20, 4000, 2],
-  'StorageNode'    => [1, 30, 512, 1]
+  'ControllerNode' => [1, 10,  8000, 3],
+  'ComputeNode'    => [1, 20, 1024, 1],
+  'StorageNode'    => [1, 30, 1024, 1]
 }
 
 hostnames = [ DEPLOYMENT_HOST_NAME ]
@@ -106,29 +106,29 @@ Vagrant.configure("2") do |config|
     ##
     ## publish ssh public key to all nodes
     ##
-	client.vm.provision :ansible_local do |ansible|
-	  ansible.compatibility_mode = "2.0"
-	  ansible.install = false
-	  ansible.provisioning_path = "/vagrant/playbooks"
-	  ansible.limit = "all"
-	  ansible.playbook = "authorize_ssh_key.yml"
-	  ansible.inventory_path = "hosts.ini"
-	  ansible.extra_vars = { ansible_user: "vagrant", ansible_ssh_pass: "vagrant" }
-	  ansible.become = true
-	end
+    client.vm.provision :ansible_local do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.install = false
+      ansible.provisioning_path = "/vagrant/playbooks"
+      ansible.limit = "all"
+      ansible.playbook = "authorize_ssh_key.yml"
+      ansible.inventory_path = "hosts.ini"
+      ansible.extra_vars = { ansible_user: "vagrant", ansible_ssh_pass: "vagrant" }
+      ansible.become = true
+    end
 
     ##
     ## run playbook: Install OpenStack
     ##
-	client.vm.provision :ansible_local do |ansible|
-	  ansible.compatibility_mode = "2.0"
-	  ansible.install = false
-	  ansible.provisioning_path = "/vagrant/playbooks"
-	  ansible.limit = "all"
-	  ansible.playbook = "install_openstack.yml"
-	  ansible.inventory_path = "hosts.ini"
-	  ansible.become = true
-	end
+    client.vm.provision :ansible_local do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.install = false
+      ansible.provisioning_path = "/vagrant/playbooks"
+      ansible.limit = "all"
+      ansible.playbook = "install_openstack.yml"
+      ansible.inventory_path = "hosts.ini"
+      ansible.become = true
+    end
 
   end
 

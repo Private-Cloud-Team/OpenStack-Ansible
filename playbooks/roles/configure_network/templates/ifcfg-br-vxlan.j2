@@ -5,9 +5,7 @@ DELAY=0
 STP=off
 ONBOOT=yes
 BOOTPROTO=none
-DEFROUTE=yes
-IPV4_FAILURE_FATAL=no
-{% if ['ComputeNode', 'NetworkNode'] | intersect(group_names) | count > 0 %}
+{% if ['ControllerNode', 'ComputeNode'] | intersect(group_names) | count > 0 %}
 IPADDR=172.29.240.{{ ip.split('.')[-1] }}
 NETMASK=255.255.252.0
 {% endif %}
