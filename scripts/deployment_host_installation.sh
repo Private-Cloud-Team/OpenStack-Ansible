@@ -1,22 +1,25 @@
 #!/bin/bash
-#dnf upgrade -y
-dnf install epel-release -y
-dnf install ansible -y
-pip3 install "openstacksdk==0.61.0" "pymysql==0.9.3" "jmespath==0.10.0" "Jinja2==3.0.3" "netaddr==0.8.0"
+
+## Install additional software packages if they were not installed during the operating system installation ##
+apt-get install build-essential git chrony openssh-server python3-dev python3-pip sudo sshpass -y
+
+## Install Ansible ##
+pip3 install ansible
+
+## Needed after installation ##
 pip3 install python-openstackclient
+
+## to check after if is still needed ##
 cp /usr/local/bin/openstack /usr/bin/
-systemctl stop firewalld
-systemctl mask firewalld
+
+## Generate SSH keys and configs ##
 mkdir /root/.ssh
 chmod 700 /root/.ssh
-sed -i "s/#PasswordAuthentication yes/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
 ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa
 echo "CheckHostIP no" > /root/.ssh/config
 echo "StrictHostKeyChecking no" >> /root/.ssh/config
 cp /root/.ssh/* /home/vagrant/.ssh/
 chown -R vagrant:vagrant /home/vagrant/.ssh
-cp /vagrant/hosts /etc/hosts
-ansible-galaxy collection install ansible.posix
-mkdir -pv /home/vagrant/.ansible/collections
-cp -r /root/.ansible/collections/* /home/vagrant/.ansible/collections/
-chown -R vagrant:vagrant /home/vagrant/.ansible/
+cp /ansible/hosts /etc/hosts
+systemctl restart ssh.service

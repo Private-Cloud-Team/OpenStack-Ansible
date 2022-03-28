@@ -6,8 +6,8 @@
           role: "configure_network",
           ext_interface_name: "eth1",
           interface_name: "eth2",
-          gateway: "10.0.2.2",
-          dns: "10.0.2.3",
+          gateway: "10.30.254.254",
+          dns: "10.23.1.253",
           tags: ['configure-network']
         }
   become: yes
@@ -17,8 +17,8 @@
   roles:
       - {
           role: "configure_os_ansible",
-          user_config_path: "/vagrant/openstack_user_config.yml",
-          user_variables_path: "/vagrant/user_variables.yml",
+          user_config_path: "/ansible/openstack_user_config.yml",
+          user_variables_path: "/ansible/user_variables.yml",
           tags: ['configure_os_ansible']
         }
   become: yes

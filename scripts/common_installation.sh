@@ -1,6 +1,10 @@
 #!/bin/bash
-#dnf upgrade -y
-sed -i s/^SELINUX=.*$/SELINUX=disabled/ /etc/selinux/config
-sed -i "s/#PasswordAuthentication yes/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+
+## Install additional software packages ##
+apt-get install bridge-utils debootstrap ifenslave ifenslave lsof lvm2 openssh-server sudo tcpdump vlan python3 -y
+
+## SSH Configs ##
+sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+systemctl restart ssh.service
 mkdir /root/.ssh
 chmod 700 /root/.ssh

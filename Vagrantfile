@@ -1,5 +1,5 @@
-IDE_CONTROLLER = 'IDE'
-IMAGE = "centos/stream8"
+IDE_CONTROLLER = 'SATA Controller'
+IMAGE = "debian/bullseye64"
 LVM_DISK_SIZE = 100 * 1024
 SIZE = '100GB'
 FILE_TO_DISK = 'lvm_disk.vdi'
@@ -8,7 +8,7 @@ DEPLOYMENT_HOST_IP = 9
 MEM_HOST = 512
 CPU_HOST = 1
 HOST_IP = "192.168.56."
-BR_MGMT_IP = "172.29.248."
+$default_network_interface = `ip route | awk '/^default/ {printf "%s", $5; exit 0}'`
 
 nodes = {
   'ControllerNode' => [1, 10,  8000, 3],
@@ -62,14 +62,18 @@ Vagrant.configure("2") do |config|
         end
 
         node.vm.network :private_network, ip: "#{HOST_IP}#{ip+i}", :netmask => "255.255.255.0"
-        node.vm.network :private_network, ip: "#{BR_MGMT_IP}#{ip+i}", :netmask => "255.255.252.0"
-        node.vm.provision "shell", privileged: true, path: "scripts/common_installation.sh"
+        node.vm.network "public_network", bridge: "#$default_network_interface", use_dhcp_assigned_default_route: true
+        node.vm.provision "shell", privileged: true, path: "scripts/upgrade.sh"
+        node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/common_installation.sh"
 
         if name == "ControllerNode"
           node.disksize.size = SIZE
-          node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/controller_installation.sh"
+          node.vm.provision "shell", privileged: true, path: "scripts/controller_installation.sh"
         elsif name == "ComputeNode"
-          node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/compute_installation.sh"
+          node.vm.provider "virtualbox" do |vb|
+            vb.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+          end
+          node.vm.provision "shell", privileged: true, path: "scripts/compute_installation.sh"
         elsif name == "StorageNode"
           node.vm.provider "virtualbox" do |v|
             unless File.exist?(FILE_TO_DISK)
@@ -77,7 +81,7 @@ Vagrant.configure("2") do |config|
             end
             v.customize ['storageattach', :id, '--storagectl', IDE_CONTROLLER, '--port', 1, '--device', 0, '--type', 'hdd', '--medium', FILE_TO_DISK]
           end
-          node.vm.provision "shell", privileged: true, reboot: true, path: "scripts/storage_installation.sh"
+          node.vm.provision "shell", privileged: true, path: "scripts/storage_installation.sh"
         end
 
       end
@@ -95,13 +99,16 @@ Vagrant.configure("2") do |config|
 
     client.vm.hostname = DEPLOYMENT_HOST_NAME
     client.vm.network :private_network, ip: "#{HOST_IP}#{DEPLOYMENT_HOST_IP}", :netmask => "255.255.255.0"
-    client.vm.network :private_network, ip: "#{BR_MGMT_IP}#{DEPLOYMENT_HOST_IP}", :netmask => "255.255.252.0"
+    client.vm.network "public_network", bridge: "#$default_network_interface", use_dhcp_assigned_default_route: true
 
     client.vm.provider "virtualbox" do |v|
       v.name = DEPLOYMENT_HOST_NAME
     end
 
-    client.vm.provision "shell", privileged: true, reboot: true, path: "scripts/deployment_host_installation.sh"
+    client.vm.provision "file", source: "./", destination: "/tmp/vagrant"
+    client.vm.provision "shell", privileged: true, inline: "rm -Rf /ansible ; mv /tmp/vagrant /ansible"
+    client.vm.provision "shell", privileged: true, reboot: true, path: "scripts/upgrade.sh"
+    client.vm.provision "shell", privileged: true, path: "scripts/deployment_host_installation.sh"
 
     ##
     ## publish ssh public key to all nodes
@@ -109,7 +116,7 @@ Vagrant.configure("2") do |config|
     client.vm.provision :ansible_local do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.install = false
-      ansible.provisioning_path = "/vagrant/playbooks"
+      ansible.provisioning_path = "/ansible/playbooks"
       ansible.limit = "all"
       ansible.playbook = "authorize_ssh_key.yml"
       ansible.inventory_path = "hosts.ini"
@@ -123,7 +130,7 @@ Vagrant.configure("2") do |config|
     client.vm.provision :ansible_local do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.install = false
-      ansible.provisioning_path = "/vagrant/playbooks"
+      ansible.provisioning_path = "/ansible/playbooks"
       ansible.limit = "all"
       ansible.playbook = "install_openstack.yml"
       ansible.inventory_path = "hosts.ini"

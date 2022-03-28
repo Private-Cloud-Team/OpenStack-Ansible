@@ -1,0 +1,86 @@
+# Physical interface
+auto {{ interface_name }}
+iface {{ interface_name }} inet manual
+
+# Container/Host management VLAN interface
+auto {{ interface_name }}.10
+iface {{ interface_name }}.10 inet manual
+    vlan-raw-device {{ interface_name }}
+
+# OpenStack Networking VXLAN (tunnel/overlay) VLAN interface
+auto {{ interface_name }}.30
+iface {{ interface_name }}.30 inet manual
+    vlan-raw-device {{ interface_name }}
+
+# Storage network VLAN interface (optional)
+auto {{ interface_name }}.20
+iface {{ interface_name }}.20 inet manual
+    vlan-raw-device {{ interface_name }}
+
+# Container/Host management bridge
+auto br-mgmt
+iface br-mgmt inet static
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    bridge_ports {{ interface_name }}.10
+    address 172.29.236.{{ ip.split('.')[-1] }}
+    netmask 255.255.252.0
+    gateway {{ gateway }}
+    dns-nameservers {{ dns }}
+    # We need to disable eth0, when using virtual lab
+    post-up ip route del default dev eth0 || true
+    post-up dhclient $IFACE
+    pre-down ip route add default dev eth0
+
+# OpenStack Networking VXLAN (tunnel/overlay) bridge
+#
+# The COMPUTE, NETWORK and INFRA nodes must have an IP address
+# on this bridge.
+#
+auto br-vxlan
+iface br-vxlan inet static
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    bridge_ports {{ interface_name }}.30
+    address 172.29.240.{{ ip.split('.')[-1] }}
+    netmask 255.255.252.0
+
+# OpenStack Networking VLAN bridge
+auto br-vlan
+iface br-vlan inet manual
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+{% if ['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0 %}
+    pre-up ip link add br-vlan-veth type veth peer name eth12 || true
+    pre-up ip link set br-vlan-veth up
+    pre-up ip link set eth12 up
+    post-down ip link del br-vlan-veth || true
+    bridge_ports {{ interface_name }} br-vlan-veth
+{% else %}
+    bridge_ports {{ interface_name }}
+{% endif %}
+
+# Storage bridge (optional)
+#
+# Only the COMPUTE and STORAGE nodes must have an IP address
+# on this bridge. When used by infrastructure nodes, the
+# IP addresses are assigned to containers which use this
+# bridge.
+#
+auto br-storage
+{% if ['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0 %}
+iface br-storage inet static
+{% else %}
+iface br-storage inet manual
+{% endif %}
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    bridge_ports {{ interface_name }}.20
+{% if ['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0 %}
+    address 172.29.244.{{ ip.split('.')[-1] }}
+    netmask 255.255.252.0
+{% endif %}

@@ -1,142 +1,19 @@
-- name: Create bakcup directory
-  file:
-      path: "{{ ifcg_directory }}/backup"
-      state: directory
-      owner: root
-      group: root
-      mode: 0700
+- name: Get a backup of old config
+  shell: "cp /etc/network/interfaces /root/old_interfaces"
 
-- name: Copy all configs to backup directory
-  shell: "cp -r {{ ifcg_directory }}/ifcfg-* {{ ifcg_directory }}/backup/"
-  ignore_errors: yes
+- name: Delete old config for interface will be used for creating vlans
+  shell: "head -n -7 /etc/network/interfaces > /tmp/tmp.txt && mv /tmp/tmp.txt /etc/network/interfaces"
 
-- name: Delete configuration of the interfaces will be used for creating vlans
-  shell: "rm {{ ifcg_directory }}/ifcfg-{{ interface_name }}"
-  ignore_errors: yes
+- name: Add interfaces.d folder to interfaces
+  shell: "echo 'source /etc/network/interfaces.d/*.cfg' >> /etc/network/interfaces"
 
-- name: Delete configuration of the interfaces not needed
-  shell: "rm {{ ifcg_directory }}/ifcfg-en*"
-  ignore_errors: yes
-
-- name: Configure physical device interface
+- name: Configure networks
   template:
-      src: ifcfg-physical.j2
-      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}"
-  vars:
-      bridge_name: "br-vlan"
-
-- name: Create vlan interface for Container/Host management
-  template:
-      src: ifcfg-vlan.j2
-      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}.{{ vlan_id }}"
-  vars:
-      vlan_id: "10"
-      bridge_name: "br-mgmt"
-
-- name: Create vlan interface for OpenStack Networking VXLAN (tunnel/overlay)
-  template:
-      src: ifcfg-vlan.j2
-      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}.{{ vlan_id }}"
-  vars:
-      vlan_id: "30"
-      bridge_name: "br-vxlan"
-
-- name: Create vlan interface for Storage network
-  template:
-      src: ifcfg-vlan.j2
-      dest: "{{ ifcg_directory }}/ifcfg-{{ interface_name }}.{{ vlan_id }}"
-  vars:
-      vlan_id: "20"
-      bridge_name: "br-storage"
-
-##
-# For tenant vlan support, create a veth pair to be used when the neutron
-# agent is not containerized on the compute hosts. 'eth12' is the value used on
-# the host_bind_override parameter of the br-vlan network section of the
-# openstack_user_config example file. The veth peer name must match the value
-# specified on the host_bind_override parameter.
-##
-
-- name: Ensure veth sysconfig network control scripts exist
-  copy:
-    src: "{{ item }}"
-    dest: "{{ ifcg_directory }}/{{ item }}"
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - "ifup-veth"
-    - "ifdown-veth"
-  when: "['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0"
-
-- name: Ensure veth sysconfig network interface files exist
-  template:
-    src: ifcfg-veth.j2
-    dest: "{{ ifcg_directory }}/ifcfg-br-vlan-veth"
-    owner: root
-    group: root
-    mode: 0644
-  when: "['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0"
-
-- name: Ensure veth peer sysconfig network interface files exist
-  template:
-    src: ifcfg-peer.j2
-    dest: "{{ ifcg_directory }}/ifcfg-eth12"
-    owner: root
-    group: root
-    mode: 0644
-  when: "['ComputeNode', 'StorageNode'] | intersect(group_names) | count > 0"
-
-##
-
-- name: Configure Management Bridge br-mgmt
-  template:
-      src: "ifcfg-br-mgmt.j2"
-      dest: "{{ ifcg_directory }}/ifcfg-br-mgmt"
+    src: openstack_interface.j2
+    dest: /etc/network/interfaces.d/openstack_interface.cfg 
   vars:
       ip: "{{ hostvars[inventory_hostname]['ansible_facts'][ext_interface_name]['ipv4']['address'] }}"
 
-- name: Configure Bridge br-vxlan
-  template:
-      src: "ifcfg-br-vxlan.j2"
-      dest: "{{ ifcg_directory }}/ifcfg-br-vxlan"
-  vars:
-      ip: "{{ hostvars[inventory_hostname]['ansible_facts'][ext_interface_name]['ipv4']['address'] }}"
-
-- name: Configure Bridge br-vlan
-  template:
-      src: "ifcfg-br-vlan.j2"
-      dest: "{{ ifcg_directory }}/ifcfg-br-vlan"
-
-- name: Configure Bridge br-storage
-  template:
-      src: "ifcfg-br-storage.j2"
-      dest: "{{ ifcg_directory }}/ifcfg-br-storage"
-  vars:
-      ip: "{{ hostvars[inventory_hostname]['ansible_facts'][ext_interface_name]['ipv4']['address'] }}"
-
-- name: Install the network scripts manager
-  dnf:
-    name: network-scripts
-    state: latest
-
-- name: disable NetworkManager
-  systemd:
-    name: NetworkManager
-    state: stopped
-    masked: yes
-  ignore_errors: true
-
-- name: Set network non cotrolled by NetworkManager
-  shell: "sed -i 's/NM_CONTROLLED=yes/NM_CONTROLLED=no/g' {{ ifcg_directory }}/ifcfg-*"
-
-- name: Remove dhclient
-  dnf:
-    name: dhclient
-    state: absent
-
-- name: Restart network
-  systemd:
-      name: network
-      state: restarted
-      enabled: yes
+- name: Reboot machines
+  reboot:
+  when: 'inventory_hostname != "localhost"'
