@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "===Installing LVM Snapshot Restore & Backup Method==="
 echo "Setting up crontab..."
-echo "@reboot touch itsnotok;sleep 300;bash /root/backup.sh >> ~/logs" | crontab -
+echo "@reboot touch /root/itsnotok;sleep 300;bash /root/backup.sh >> ~/logs" | crontab -
 echo "Set size of LVM snapshot (example: 20G):"
 read size
 echo "Creating LVM Snapshot..."
