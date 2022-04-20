@@ -3,10 +3,10 @@ echo "===Installing LVM Snapshot Restore & Backup Method==="
 echo "Set size of LVM snapshot (example: 20G):"
 read size
 echo "Creating LVM Snapshot..."
-lvcreate -L $size -s -n snap /dev/ubuntu-vg/ubuntu-lv 2>/dev/null
+lvcreate -L $size -s -n snap /dev/ubuntu-vg/ubuntu-lv
 check=$(echo $?)
-if [ $check -eq 5 ];then
-    echo -e '\033[31m Volume "snap" already exists \033[0m'
+if [ $check != 0 ];then
+    echo -e '\033[31m an error occurs. \033[0m'
     exit
 fi
 echo "Setting up crontab..."
