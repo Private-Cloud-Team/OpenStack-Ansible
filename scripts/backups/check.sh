@@ -7,4 +7,4 @@ if [ $check -eq 1 ];then
                 rm -rf /root/itsnotok
 	fi
 fi
-//TODO: check if the lvm snapshot named snap is exists and if not exists notify the user RED color.
+#TODO: check if the lvm snapshot named snap is exists and if not exists notify the user RED color.
