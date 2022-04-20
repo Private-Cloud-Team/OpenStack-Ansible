@@ -6,7 +6,7 @@ echo "Creating LVM Snapshot..."
 lvcreate -L $size -s -n snap /dev/ubuntu-vg/ubuntu-lv
 check=$(echo $?)
 if [ $check != 0 ];then
-    echo -e '\033[31m an error occurs. \033[0m'
+    echo -e '\033[31m An error occurs. \033[0m'
     exit
 fi
 echo "Setting up crontab..."
