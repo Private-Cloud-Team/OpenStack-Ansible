@@ -4,7 +4,11 @@ echo "Set size of LVM snapshot (example: 20G):"
 read size
 echo "Creating LVM Snapshot..."
 lvcreate -L $size -s -n snap /dev/ubuntu-vg/ubuntu-lv
-#TODO: if the above command returned error: already exists notify the user with RED COLOR.
+check=$(echo $?)
+if [ $check -eq 5 ];then
+    echo -e '\033[31m Volume "snap" already exists \033[0m'
+    exit
+fi
 echo "Setting up crontab..."
 echo "@reboot touch /root/itsnotok;sleep 600;bash /root/backup.sh >> ~/logs" | crontab -
 echo "Setting backup.sh && check.sh..."
