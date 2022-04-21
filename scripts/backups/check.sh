@@ -9,5 +9,5 @@ if [ $check -eq 1 ];then
 	fi
 fi
 if [ $to_check -eq 1 ];then
-        echo -e '\033[31mWarning: There is only one logical volume, that\'s probably there is no snapshot configured!!! \033[0m'
+        echo -e "\033[31mWarning: There is only one logical volume, that's probably there is no snapshot configured!!! \033[0m"
 fi
