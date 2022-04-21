@@ -8,6 +8,6 @@ if [ $check -eq 1 ];then
                 rm -rf /root/itsnotok
 	fi
 fi
-if [ $to_check -eq 2 ];then
-        echo -e '\033[31m an error occurs. \033[0m'
+if [ $to_check -eq 1 ];then
+        echo -e '\033[31mWarning: There is only one logical volume, that\'s probably there is no snapshot configured!!! \033[0m'
 fi
