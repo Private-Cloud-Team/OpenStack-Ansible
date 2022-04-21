@@ -1,4 +1,5 @@
 #!/bin/bash
+lvchange --refresh ubuntu-vg
 echo "===Installing LVM Snapshot Restore & Backup Method==="
 echo "Set size of LVM snapshot (example: 20G):"
 read size
