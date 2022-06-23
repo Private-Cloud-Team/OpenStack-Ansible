@@ -1,0 +1,23 @@
+---
+global_overrides:
+  swift:
+    part_power: 6
+    repl_number: 1
+    storage_network: 'br-storage'
+    mount_point: /srv/node
+    drives:
+      - name: sda
+    storage_policies:
+      - policy:
+          name: gold
+          index: 0
+          default: True
+swift-proxy_hosts:
+  infra1:
+    ip: 172.29.236.11
+swift_hosts:
+  storage1:
+    ip: 172.29.236.13
+    container_vars:
+      swift_vars:
+        storage_ip: 172.29.244.13

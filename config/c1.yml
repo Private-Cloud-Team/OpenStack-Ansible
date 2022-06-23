@@ -1,0 +1,55 @@
+# This is the network config written by 'subiquity'
+network:
+  version: 2
+  ethernets:
+    eno1:
+      dhcp4: true
+    eno2:
+      dhcp4: true
+    eno3:
+      dhcp4: true
+    eno4:
+      dhcp4: true
+    ens2f0:
+      dhcp4: true
+    ens2f1:
+      dhcp4: false
+  vlans:
+    ens2f1.20:
+      id: 20
+      link: ens2f1
+    ens2f1.30:
+      id: 30
+      link: ens2f1
+    ens2f1.40:
+      id: 40
+      link: ens2f1
+  bridges:
+    br-mgmt:
+      addresses:
+        - 172.29.236.10/22
+      interfaces:
+        - ens2f1.40
+      nameservers:
+        addresses:
+          - 10.23.1.253
+        search:
+          - 1337.ma
+    br-storage:
+      addresses:
+        - 172.29.244.10/22
+      interfaces:
+        - ens2f1.20
+    br-vxlan:
+      addresses:
+        - 172.29.240.10/22
+      interfaces:
+        - ens2f1.30
+    br-vlan:
+      addresses:
+        - 10.62.1.1/24
+      interfaces:
+        - ens2f1
+      routes:
+        - to: default
+          via: 10.62.1.254
