@@ -1,16 +1,36 @@
 ---
 cidr_networks:
   container: 172.29.236.0/22
+  tunnel: 172.29.240.0/22
   storage: 172.29.244.0/22
 
 used_ips:
   - "172.29.236.1,172.29.236.50"
+  - "172.29.240.1,172.29.240.50"
   - "172.29.244.1,172.29.244.50"
 
 global_overrides:
+  swift:
+    part_power: 9
+    repl_number: 1
+    storage_network: 'br-storage'
+    mount_point: /srv/node
+    drives:
+      - name: sdi
+      - name: sdj
+      - name: sdk
+      - name: sdl
+      - name: sdm
+      - name: sdn
+      - name: sdo
+    storage_policies:
+      - policy:
+          name: standard
+          index: 0
+          default: True
   # The internal and external VIP should be different IPs, however they
   # do not need to be on separate networks.
-  external_lb_vip_address: 10.62.1.1
+  external_lb_vip_address: private-cloud-controller.1337.ma
   internal_lb_vip_address: 172.29.236.11
   management_bridge: "br-mgmt"
   provider_networks:
@@ -24,6 +44,17 @@ global_overrides:
           - all_containers
           - hosts
         is_container_address: true
+    - network:
+        container_bridge: "br-vxlan"
+        container_type: "veth"
+        container_interface: "eth10"
+        ip_from_q: "tunnel"
+        type: "vxlan"
+        range: "1:1000"
+        net_name: "vxlan"
+        group_binds:
+          - network_hosts
+          - compute_hosts
     - network:
         container_bridge: "br-vlan"
         container_type: "veth"
@@ -129,11 +160,13 @@ network_hosts:
 compute_hosts:
   compute1:
     ip: 172.29.236.12
+  compute2:
+    ip: 172.29.236.13
 
 # cinder storage host (LVM-backed)
 storage_hosts:
   storage1:
-    ip: 172.29.236.13
+    ip: 172.29.236.14
     container_vars:
       cinder_backends:
         limit_container_types: cinder_volume
@@ -141,4 +174,36 @@ storage_hosts:
           volume_group: cinder-volumes
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: "172.29.244.13"
+          iscsi_ip_address: "172.29.244.14"
+  storage2:
+    ip: 172.29.236.15
+    container_vars:
+      cinder_backends:
+        limit_container_types: cinder_volume
+        lvm:
+          volume_group: cinder-volumes
+          volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
+          volume_backend_name: LVM_iSCSI
+          iscsi_ip_address: "172.29.244.15"
+
+# swift
+swift-proxy_hosts:
+  infra1:
+    ip: 172.29.236.11
+
+swift_hosts:
+  storage1:
+    ip: 172.29.236.14
+    container_vars:
+      swift_vars:
+        storage_ip: 172.29.244.14
+  storage2:
+    ip: 172.29.236.15
+    container_vars:
+      swift_vars:
+        storage_ip: 172.29.244.15
+
+# magnum
+magnum-infra_hosts:
+  infra1:
+    ip: 172.29.236.11
