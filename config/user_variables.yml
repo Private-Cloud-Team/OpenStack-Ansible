@@ -1,18 +1,35 @@
 ---
+# Copyright 2014, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ###
 ### This file contains commonly used overrides for convenience. Please inspect
 ### the defaults for each role to find additional override options.
 ###
 
-debug: True
+## Debug and Verbose options.
+debug: true
 swift_allow_all_users: True
 horizon_enable_password_retrieve: True
 horizon_images_upload_mode: legacy
 magnum_config_overrides:
   cinder:
     default_docker_volume_type: lvm
-haproxy_ssl_letsencrypt_certbot_server: "https://acme-staging-v02.api.letsencrypt.org/directory"
-haproxy_ssl: true
-haproxy_ssl_letsencrypt_enable: True
-haproxy_ssl_letsencrypt_install_method: "distro"
-haproxy_ssl_letsencrypt_email: "admin@oulhafiane.me"
+horizon_custom_uploads:
+  logo:
+    src: "/etc/openstack_deploy/logo.svg"
+    dest: "img/logo.svg"
+  logo_splash:
+    src: "/etc/openstack_deploy/logo-splash.svg"
+    dest: "img/logo-splash.svg"
