@@ -3,29 +3,33 @@ network:
   version: 2
   ethernets:
     eno1:
-      dhcp4: false
+      dhcp4: true
     eno2:
       dhcp4: true
     eno3:
       dhcp4: true
     eno4:
       dhcp4: true
+    enp59s0f0:
+      dhcp4: true
+    enp59s0f1:
+      dhcp4: true
   vlans:
-    eno1.20:
+    enp59s0f1.20:
       id: 20
-      link: eno1
-    eno1.30:
+      link: enp59s0f1
+    enp59s0f1.30:
       id: 30
-      link: eno1
-    eno1.40:
+      link: enp59s0f1
+    enp59s0f1.40:
       id: 40
-      link: eno1
+      link: enp59s0f1
   bridges:
     br-mgmt:
       addresses:
-        - 172.29.236.13/22
+        - 172.29.236.14/22
       interfaces:
-        - eno1.40
+        - enp59s0f1.40
       nameservers:
         addresses:
           - 10.23.1.253
@@ -33,19 +37,11 @@ network:
           - 1337.ma
     br-storage:
       addresses:
-        - 172.29.244.13/22
+        - 172.29.244.14/22
       interfaces:
-        - eno1.20
+        - enp59s0f1.20
     br-vxlan:
       addresses:
-        - 172.29.240.13/22
+        - 172.29.240.14/22
       interfaces:
-        - eno1.30
-    br-vlan:
-      addresses:
-        - 10.62.1.3/24
-      interfaces:
-        - eno1
-      routes:
-        - to: default
-          via: 10.62.1.254
+        - enp59s0f1.30
