@@ -1,0 +1,47 @@
+# This is the network config written by 'subiquity'
+network:
+  version: 2
+  ethernets:
+    eno1:
+      dhcp4: true
+    eno2:
+      dhcp4: true
+    eno3:
+      dhcp4: true
+    eno4:
+      dhcp4: true
+    enp59s0f0:
+      dhcp4: true
+    enp59s0f1:
+      dhcp4: true
+  vlans:
+    enp59s0f1.20:
+      id: 20
+      link: enp59s0f1
+    enp59s0f1.30:
+      id: 30
+      link: enp59s0f1
+    enp59s0f1.40:
+      id: 40
+      link: enp59s0f1
+  bridges:
+    br-mgmt:
+      addresses:
+        - 172.29.236.15/22
+      interfaces:
+        - enp59s0f1.40
+      nameservers:
+        addresses:
+          - 10.23.1.253
+        search:
+          - 1337.ma
+    br-storage:
+      addresses:
+        - 172.29.244.15/22
+      interfaces:
+        - enp59s0f1.20
+    br-vxlan:
+      addresses:
+        - 172.29.240.15/22
+      interfaces:
+        - enp59s0f1.30
