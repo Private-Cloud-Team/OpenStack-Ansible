@@ -33,3 +33,29 @@ horizon_custom_uploads:
   logo_splash:
     src: "/etc/openstack_deploy/logo-splash.svg"
     dest: "img/logo-splash.svg"
+_horizon_available_themes:
+  default:
+    theme_name: "default"
+    theme_label: "Default"
+    theme_path: "themes/default"
+  material:
+    theme_name: "material"
+    theme_label: "Material"
+    theme_path: "themes/material"
+  bcp_theme:
+    theme_name: "bcp_theme"
+    theme_label: "BCP Theme"
+    theme_path: "themes/bcp_theme"
+horizon_custom_themes:
+  bcp_theme:
+    theme_name: "bcp_theme"
+    theme_label: "BCP Theme"
+    theme_path: "themes/bcp_theme"
+    theme_src_archive: "/etc/openstack_deploy/horizon/themes/bcp_theme.tar.gz"
+horizon_default_theme: "bcp_theme"
+
+# octavia
+octavia_service_net_setup: False
+octavia_neutron_management_network_name: external_net
+octavia_provider_network_name: physnet1
+octavia_ssh_enabled: True
