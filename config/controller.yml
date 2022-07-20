@@ -13,7 +13,7 @@ network:
     enp94s0f0:
       dhcp4: true
     enp94s0f1:
-      dhcp4: true
+      dhcp4: false
   vlans:
     enp94s0f1.20:
       id: 20
@@ -45,3 +45,11 @@ network:
         - 172.29.240.11/22
       interfaces:
         - enp94s0f1.30
+    br-vlan:
+      addresses:
+        - 10.62.1.1/24
+      interfaces:
+        - enp94s0f1
+      routes:
+        - to: default
+          via: 10.62.1.254
