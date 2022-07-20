@@ -3,6 +3,7 @@ cidr_networks:
   container: 172.29.236.0/22
   tunnel: 172.29.240.0/22
   storage: 172.29.244.0/22
+  external: 10.62.1.0/24
 
 used_ips:
   - "172.29.236.1,172.29.236.50"
@@ -60,18 +61,22 @@ global_overrides:
         container_type: "veth"
         container_interface: "eth12"
         host_bind_override: "eno3"
+        ip_from_q: "external"
         type: "flat"
         net_name: "physnet1"
         group_binds:
           - network_hosts
           - compute_hosts
+          - octavia-worker
+          - octavia-housekeeping
+          - octavia-health-manager
     - network:
         container_bridge: "br-vlan"
         container_type: "veth"
         container_interface: "eth11"
         host_bind_override: "eno3"
         type: "vlan"
-        range: "101:200,301:400"
+        range: "10:400"
         net_name: "physnet1"
         group_binds:
           - network_hosts
@@ -87,6 +92,7 @@ global_overrides:
           - cinder_api
           - cinder_volume
           - nova_compute
+          - swift-proxy
 
 ###
 ### Infrastructure
@@ -205,5 +211,10 @@ swift_hosts:
 
 # magnum
 magnum-infra_hosts:
+  infra1:
+    ip: 172.29.236.11
+
+# octavia
+octavia-infra_hosts:
   infra1:
     ip: 172.29.236.11
